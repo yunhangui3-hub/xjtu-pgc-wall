@@ -90,3 +90,18 @@ footer p,footer>span { color:#66758a; }
 .companion-copy { margin:9px 1px 0; display:flex; justify-content:space-between; gap:10px; color:rgba(255,255,255,.84); font-size:7.5px; }.companion-copy span { color:rgba(255,255,255,.58); }
 .companion-loading { min-height:72px; display:flex; align-items:center; justify-content:center; gap:9px; color:rgba(255,255,255,.78); }.companion-loading .loading-dot { width:17px; height:17px; border-color:rgba(255,255,255,.2); border-top-color:white; }.companion-loading p { margin:0; font-size:8px; }
 @media(max-width:720px){.companion-data{margin-top:20px;padding:11px}.companion-cards>div{padding:8px 7px}.companion-cards strong{font-size:18px}.companion-cards span{font-size:6.5px}.companion-copy{display:block;line-height:1.55}.companion-copy span{display:block}.companion-title>i{display:none}}
+
+.note-card:focus-visible { outline:3px solid rgba(0,61,165,.35); outline-offset:5px; }
+.note-like { min-height:30px; padding:4px 7px; border:1px solid rgba(46,52,46,.12); border-radius:20px; display:flex; align-items:center; gap:4px; color:rgba(44,51,46,.66); background:rgba(255,255,255,.34); cursor:pointer; position:relative; z-index:2; }
+.note-like svg { opacity:.72; }
+.note-like em,.note-like b { font-size:8px; font-style:normal; font-weight:700; }
+.note-like.liked { color:#003da5; border-color:rgba(0,61,165,.18); background:rgba(255,255,255,.58); cursor:default; }
+.interaction-row button:disabled { cursor:default; opacity:.82; }
+.reply-list { margin-top:13px; padding:13px; border:1px solid #e4ddd3; border-radius:10px; background:#faf8f3; }
+.reply-list-title { margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }.reply-list-title strong{font-size:10px}.reply-list-title span{min-width:20px;padding:2px 6px;border-radius:12px;text-align:center;color:#003da5;background:#e7f5fc;font-size:8px;font-weight:800}
+.reply-item { padding:10px 0; display:flex; align-items:flex-start; gap:8px; border-top:1px dashed #e2dacf; }.reply-item:first-of-type{border-top:0}.reply-item>div{min-width:0;flex:1}.reply-item strong{display:flex;justify-content:space-between;gap:10px;font-size:9px}.reply-item strong small{color:#9b958d;font-size:7px;font-weight:400}.reply-item p{margin:4px 0 0;color:#5f5a55;font-size:9px;line-height:1.6;overflow-wrap:anywhere}.reply-empty,.reply-loading,.reply-error{margin:5px 0;color:#969087;font-size:8px;line-height:1.5}.reply-loading{display:flex;align-items:center;gap:7px}.reply-loading .loading-dot{width:14px;height:14px;border-width:2px}.reply-error{padding:8px;border-radius:7px;color:#914c46;background:#fff0ee}.reply-error.submit{grid-column:1/-1;margin:0}
+.reply-box input { grid-column:1/-1; height:35px; border:1px solid #ddd4c7; border-radius:8px; padding:0 10px; outline:0; background:white; font-size:9px; }.reply-box input:focus{border-color:#00a3e0;box-shadow:0 0 0 3px rgba(0,163,224,.08)}
+
+button,a,.note-card { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+@media(max-width:720px){body{overscroll-behavior-y:none}.note-like{min-width:66px;min-height:34px;justify-content:center}.note-card{will-change:transform}.reply-list{max-height:220px;overflow:auto;-webkit-overflow-scrolling:touch}.reply-box input{height:40px}}
+@media(hover:none){.note-card{filter:drop-shadow(0 6px 6px rgba(67,54,35,.1))}}
