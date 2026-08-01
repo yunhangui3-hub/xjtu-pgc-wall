@@ -2,18 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "西交秋招便利贴情报墙",
-  description: "留下你的秋招心愿，找到同行的人。西安交通大学校园秋招互助社区。",
+  title: "XJTU PGC 秋招心愿情报墙",
+  description: "XJTU PGC 陪伴西交同学投递宝洁：记录目标、分享困惑、寻找同行伙伴。",
   openGraph: {
-    title: "西交秋招便利贴情报墙",
-    description: "留下你的秋招心愿，找到同行的人",
-    images: [{ url: "/og.png", width: 1732, height: 909, alt: "西交秋招便利贴情报墙" }],
+    title: "XJTU PGC 秋招心愿情报墙",
+    description: "秋招路上，有一群西交同学和 PGC 一起同行。",
+    images: [{ url: "/og-pgc-care.png", width: 1732, height: 909, alt: "XJTU PGC 秋招心愿情报墙" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "西交秋招便利贴情报墙",
-    description: "留下你的秋招心愿，找到同行的人",
-    images: ["/og.png"],
+    title: "XJTU PGC 秋招心愿情报墙",
+    description: "秋招路上，有一群西交同学和 PGC 一起同行。",
+    images: ["/og-pgc-care.png"],
   },
   icons: {
     icon: "/favicon.svg",
