@@ -115,7 +115,7 @@ function CompanionStats({ data, loading }: { data: CompanionData; loading: boole
   </div>;
 }
 
-function CampusHero({ openPublish, stats, loading }: { openPublish: () => void; stats: CompanionData; loading: boolean }) {
+function CampusHero({ stats, loading }: { stats: CompanionData; loading: boolean }) {
   return <section className="hero" id="top">
     <div className="paper-grain" />
     <div className="falling-leaves" aria-hidden="true">
@@ -126,7 +126,6 @@ function CampusHero({ openPublish, stats, loading }: { openPublish: () => void; 
         <motion.div className="eyebrow" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}><Sparkles size={14} /> XJTU PGC · 2026 宝洁秋招陪伴计划</motion.div>
         <motion.h1 initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .08 }}>秋招路上，<br /><em>我们并肩同行</em></motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .18 }}>XJTU PGC 陪伴西交同学投递宝洁，<br className="desktop-break" />记录目标、分享困惑、寻找同行伙伴。</motion.p>
-        <motion.button className="hero-cta" onClick={openPublish} whileHover={{ y: -2 }} whileTap={{ scale: .97 }}><Plus size={18} /> 写下我的秋招心愿</motion.button>
         <CompanionStats data={stats} loading={loading} />
       </div>
       <div className="campus-scene" aria-hidden="true">
@@ -138,6 +137,10 @@ function CampusHero({ openPublish, stats, loading }: { openPublish: () => void; 
     </div>
     <div className="hero-footnote"><span>PGC 陪伴不是替你走，而是和你一起走</span><i /></div>
   </section>;
+}
+
+function PublishInvitation({ openPublish }: { openPublish: () => void }) {
+  return <section className="publish-invitation" aria-label="发布便利贴入口"><div><span className="publish-invitation-kicker"><Sparkles /> YOUR VOICE MATTERS</span><h2>先写下此刻的秋招心愿</h2><p>一个目标、一份困惑，或一句寻找同行伙伴的话，都值得被认真看见。</p></div><motion.button onClick={openPublish} whileHover={{ y: -3, scale: 1.01 }} whileTap={{ scale: .97 }}><Plus />写下一张便利贴<ArrowRight /></motion.button><div className="invitation-note" aria-hidden="true"><i /><span>和西交同学<br />一起向宝洁出发</span></div></section>;
 }
 
 function NoteCard({ note, onOpen, onLike, liked, isNew }: { note: Note; onOpen: () => void; onLike: () => void; liked: boolean; isNew: boolean }) {
@@ -162,6 +165,25 @@ function NotesWall({ notes, setSelected, openPublish, likeNote, likedIds, newId,
     {loading ? <div className="wall-state"><span className="loading-dot" /><p>正在把大家的心愿贴到墙上…</p></div> : error ? <div className="wall-state error"><CircleHelp /><p>{error}</p><button onClick={reload}>重新加载</button></div> : shown.length === 0 ? <div className="wall-state"><Sparkles /><p>这里还没有便利贴，来写下第一张吧。</p><button onClick={openPublish}>写一张便利贴</button></div> : <motion.div layout className="notes-grid"><AnimatePresence mode="popLayout">{shown.map(note => <NoteCard key={note.id} note={note} onOpen={() => setSelected(note)} onLike={() => likeNote(note.id)} liked={likedIds.has(String(note.id))} isNew={newId === note.id} />)}</AnimatePresence></motion.div>}
     <div className="wall-ending"><span>🍂</span><p>墙的这一面写下心愿，墙的另一面站着同行的人。<small>PGC 会持续收集大家的真实困惑，陪你走过每一个投递节点。</small></p></div>
   </section>;
+}
+
+const radarTerms = ["宝洁", "八大问", "面试", "网申", "笔试", "群面", "简历", "投递", "搭子", "供应链", "品牌管理", "职业成长", "BRM", "CBD", "PS", "HR", "F&A"];
+
+function WishRadar({ notes, loading }: { notes: Note[]; loading: boolean }) {
+  const words = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const note of notes) {
+      const source = `${note.content} ${note.position || ""}`.toLowerCase();
+      for (const term of radarTerms) if (source.includes(term.toLowerCase())) counts.set(term, (counts.get(term) || 0) + 1);
+      const direction = note.position?.trim();
+      if (direction && direction !== "方向待定" && !radarTerms.some(term => term.toLowerCase() === direction.toLowerCase())) counts.set(direction, (counts.get(direction) || 0) + 1);
+    }
+    const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16);
+    const max = Math.max(1, ...ranked.map(([, count]) => count));
+    return ranked.map(([label, count], index) => ({ label, count, size: 13 + Math.round((count / max) * 21), tone: index % 4 }));
+  }, [notes]);
+
+  return <section className="radar-section" id="radar"><div className="section-heading"><div><span>WISH RADAR</span><h2>秋招心愿雷达</h2><p>看看西交同学最近都在关注什么</p></div><span className="radar-live"><i /> 来自心愿墙的实时信号</span></div><div className="radar-map"><div className="radar-rings" aria-hidden="true"><i /><i /><i /><span>XJTU<br /><b>PGC</b></span></div>{loading ? <div className="radar-empty"><span className="loading-dot" />正在捕捉大家的秋招关注点…</div> : words.length === 0 ? <div className="radar-empty"><Sparkles />心愿信号正在汇聚，发布便利贴后这里会生成关键词。</div> : <div className="radar-cloud" aria-label="秋招关注关键词词云">{words.map((word, index) => <motion.span className={`tone-${word.tone}`} key={word.label} style={{ fontSize: word.size }} title={`${word.count} 张便利贴提到`} initial={{ opacity: 0, scale: .75 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: index * .035 }} whileHover={{ scale: 1.1, rotate: 0 }}>{word.label}<small>{word.count}</small></motion.span>)}</div>}</div><p className="radar-footnote">词语越大，代表近期被更多西交同学提及 · 数据随便利贴实时更新</p></section>;
 }
 
 function NoteDetail({ note, close, liked, onLike, replies, repliesLoading, repliesError, submitReply }: { note: Note | null; close: () => void; liked: boolean; onLike: () => void; replies: NoteReply[]; repliesLoading: boolean; repliesError: string; submitReply: (content: string, nickname: string) => Promise<string | null> }) {
@@ -197,7 +219,7 @@ function PublishModal({ close, publish }: { close: () => void; publish: (draft: 
 
 function Timeline() {
   const stages = [{ n: "阶段 1", title: "网申开启", status: "即将开启", tone: "soon" }, { n: "阶段 2", title: "笔试阶段", status: "待更新", tone: "waiting" }, { n: "阶段 3", title: "面试阶段", status: "待更新", tone: "waiting" }];
-  return <section className="timeline-section" id="timeline"><div className="section-heading"><div><span>STAY TOGETHER</span><h2>宝洁秋招关键节点</h2><p>节点将根据官方信息实时更新，PGC 陪你提前做好准备。</p></div><span className="update-pill"><i /> PGC 持续更新中</span></div>
+  return <section className="timeline-section" id="timeline"><div className="section-heading"><div><span>STAY TOGETHER</span><h2>宝洁秋招重要事件日历</h2><p>节点将根据官方信息实时更新，PGC 陪你提前做好准备。</p></div><span className="update-pill"><i /> PGC 持续更新中</span></div>
     <div className="timeline-track">{stages.map((item, i) => <motion.article key={item.title} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * .1 }}><span className="stage-number">0{i + 1}</span><small>{item.n}</small><h3>{item.title}</h3><p><Clock3 size={14} /> 时间：待官方公布</p><em className={item.tone}>{item.status}</em>{i < stages.length - 1 && <i className="connector" />}</motion.article>)}</div>
     <div className="reminder-card"><div className="reminder-date"><CalendarDays /><span><small>PGC 重要提醒</small><strong>即将开始</strong></span></div><div><span>宝洁秋招经验分享会</span><h3>和西交学长姐面对面，聊聊真实的投递经历</h3><p>时间：待公布 · 地点：待公布</p></div><button onClick={() => alert("详情将在官方信息确认后第一时间更新。")}>查看详情 <ChevronRight /></button></div>
   </section>;
@@ -392,5 +414,5 @@ export default function App() {
     setPublishing(false); setSuccess(true); location.hash = "wall"; setTimeout(() => setNewId(null), 1500); setTimeout(() => setSuccess(false), 4300); return null;
   };
 
-  return <div className="app-shell"><Header /><main><CampusHero openPublish={() => setPublishing(true)} stats={companionStats} loading={loading} /><NotesWall notes={notes} setSelected={setSelected} openPublish={() => setPublishing(true)} likeNote={id => void likeNote(id)} likedIds={likedIds} newId={newId} loading={loading} error={dataError} reload={() => void loadNotes()} /><Timeline /><Stories /></main><footer><Logo /><p>秋招路上，有一群西交同学和 PGC 一起同行。</p><span>© 2026 XJTU PGC</span></footer><button className="floating-publish" onClick={() => setPublishing(true)}><Plus /><span>写一张便利贴</span></button><AnimatePresence>{selected && <NoteDetail note={selected} close={() => setSelected(null)} liked={likedIds.has(String(selected.id))} onLike={() => void likeNote(selected.id)} replies={replies} repliesLoading={repliesLoading} repliesError={repliesError} submitReply={(content, nickname) => submitReply(selected.id, content, nickname)} />}</AnimatePresence><AnimatePresence>{publishing && <PublishModal close={() => setPublishing(false)} publish={publish} />}</AnimatePresence><AnimatePresence>{success && <SuccessToast close={() => setSuccess(false)} />}</AnimatePresence></div>;
+  return <div className="app-shell"><Header /><main><CampusHero stats={companionStats} loading={loading} /><PublishInvitation openPublish={() => setPublishing(true)} /><NotesWall notes={notes} setSelected={setSelected} openPublish={() => setPublishing(true)} likeNote={id => void likeNote(id)} likedIds={likedIds} newId={newId} loading={loading} error={dataError} reload={() => void loadNotes()} /><WishRadar notes={notes} loading={loading} /><Timeline /><Stories /></main><footer><Logo /><p>秋招路上，有一群西交同学和 PGC 一起同行。</p><span>© 2026 XJTU PGC</span></footer><button className="floating-publish" onClick={() => setPublishing(true)}><Plus /><span>写一张便利贴</span></button><AnimatePresence>{selected && <NoteDetail note={selected} close={() => setSelected(null)} liked={likedIds.has(String(selected.id))} onLike={() => void likeNote(selected.id)} replies={replies} repliesLoading={repliesLoading} repliesError={repliesError} submitReply={(content, nickname) => submitReply(selected.id, content, nickname)} />}</AnimatePresence><AnimatePresence>{publishing && <PublishModal close={() => setPublishing(false)} publish={publish} />}</AnimatePresence><AnimatePresence>{success && <SuccessToast close={() => setSuccess(false)} />}</AnimatePresence></div>;
 }
