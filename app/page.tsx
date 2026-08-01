@@ -204,8 +204,12 @@ function Timeline() {
 }
 
 function Stories() {
-  const stories = [{ title: "从机械到品牌管理，我的宝洁 BRM 申请经历", role: "2025 届 · BRM" }, { title: "八大问不是背答案，而是重新认识自己", role: "2024 届 · 宝洁校友" }, { title: "群面沉默并不可怕，找到自己的表达方式", role: "2025 届 · PS" }];
-  return <section className="stories-section" id="stories"><div className="section-heading light"><div><span>REAL STORIES</span><h2>西交学长姐上岸故事</h2><p>不是标准答案，是走过这段路的人留下的真实回声。</p></div></div><div className="story-grid">{stories.map((story, i) => <motion.a href={`#story-${i + 1}`} onClick={e => e.preventDefault()} key={story.title} whileHover={{ y: -5 }}><span>0{i + 1}</span><div><strong>{story.title}</strong><p>{story.role}</p></div><i>预留故事入口 <ArrowRight /></i></motion.a>)}</div><div className="story-quote"><span>“</span><p>我们相信，陪伴的意义不是给出所有答案，<br />而是让每一个认真准备的人知道：你并不孤单。</p><strong>— XJTU PGC</strong></div></section>;
+  const stories = [
+    { title: "师兄师姐播客季 No.8｜非典型工科生在宝洁的7年", tags: ["宝洁秋招", "供应链管理", "职业成长"], summary: "来自西交的学长分享进入宝洁后的成长经历，从校园选择到职场发展，探索工科背景学生如何找到自己的职业方向。", url: "https://mp.weixin.qq.com/s/_CGOqzT2Ymbl6Rm6I33ygg" },
+    { title: "师兄师姐播客季 No.9｜传统工科“变形记”，开启职场升级大冒险！", tags: ["宝洁秋招", "工科转型", "职场探索"], summary: "听西交学长分享从传统工科背景走向宝洁的成长故事，了解职业选择背后的思考与行动。", url: "https://mp.weixin.qq.com/s/Wth5IbrRhMOCVXHRLGlu7g" },
+    { title: "师兄师姐播客季 No.10｜从微电子到品牌增干部的破圈答案", tags: ["宝洁秋招", "品牌管理", "跨领域成长"], summary: "来自西交学长姐的真实经历分享，看他们如何突破专业边界，探索属于自己的职业道路。", url: "https://mp.weixin.qq.com/s/yDYMIMX8mAvoI4l1tlnZyg" },
+  ];
+  return <section className="stories-section" id="stories"><div className="section-heading light"><div><span>REAL STORIES · XJTU PGC</span><h2>听见宝洁路上的他们</h2><p>来自西交 PGC 学长姐的一线分享，听他们讲述从校园到职场的真实成长故事。</p></div></div><div className="podcast-grid">{stories.map((story, i) => <motion.article className="podcast-card" key={story.title} whileHover={{ y: -6 }} transition={{ type: "spring", stiffness: 280, damping: 22 }}><span className="podcast-index">0{i + 1}</span><div className="podcast-tags">{story.tags.map(tag => <span key={tag}>{tag}</span>)}</div><h3>{story.title}</h3><p className="podcast-summary">{story.summary}</p><a className="podcast-link" href={story.url} target="_blank" rel="noopener noreferrer" aria-label={`阅读故事：${story.title}`}>阅读故事 <ArrowRight /></a></motion.article>)}</div><div className="story-quote"><span>“</span><p>真实的成长没有标准路径，<br />但每一次选择，都能让我们更靠近想成为的自己。</p><strong>— XJTU PGC</strong></div></section>;
 }
 
 function SuccessToast({ close }: { close: () => void }) { return <motion.div className="success-toast" initial={{ opacity: 0, y: 35, scale: .88 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -15 }}><span><CheckCircle2 /></span><div><strong>发布成功，心愿已上墙！</strong><small>PGC 和同行的西交同学会在这里看见你</small></div><button onClick={close}><X /></button><i /><i /><i /></motion.div>; }

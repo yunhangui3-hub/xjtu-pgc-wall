@@ -68,6 +68,13 @@ button,a { color:inherit; }
 .reminder-card > div:nth-child(2)>span { color:#fedb00; }
 .stories-section { background:#012169; }
 .section-heading.light > div > span,.story-grid a>i svg,.story-quote>span { color:#45b8e8; }
+.podcast-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; position:relative; z-index:1; }
+.podcast-card { min-height:330px; padding:24px; border:1px solid rgba(255,255,255,.16); border-radius:16px; display:flex; flex-direction:column; color:#24272d; background:#f8f4ea; box-shadow:0 16px 36px rgba(0,22,78,.2); }
+.podcast-index { color:#00a3e0; font:italic 20px/1 Georgia,serif; }
+.podcast-tags { margin:18px 0 13px; display:flex; flex-wrap:wrap; gap:6px; }.podcast-tags span{padding:4px 8px;border:1px solid rgba(0,61,165,.12);border-radius:20px;color:#003da5;background:#eaf6fc;font-size:8px;font-weight:800}
+.podcast-card h3 { margin:0; color:#17233c; font-size:15px; line-height:1.65; }
+.podcast-summary { margin:13px 0 20px; color:#6f747b; font-size:9px; line-height:1.8; }
+.podcast-link { min-height:39px; margin-top:auto; padding:0 13px; border-radius:9px; display:flex; align-items:center; justify-content:space-between; color:white; background:#003da5; text-decoration:none; font-size:9px; font-weight:900; transition:background .2s ease,box-shadow .2s ease; }.podcast-link:hover{background:#0050bd;box-shadow:0 8px 20px rgba(0,61,165,.2)}.podcast-link svg{width:15px;height:15px}
 .detail-modal,.publish-modal { background:#fff; }
 .interaction-row button.active { color:#003da5; border-color:rgba(0,61,165,.28); background:#eef8ff; }
 .floating-publish { box-shadow:0 9px 27px rgba(0,61,165,.28); }
@@ -104,4 +111,5 @@ footer p,footer>span { color:#66758a; }
 
 button,a,.note-card { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 @media(max-width:720px){body{overscroll-behavior-y:none}.note-like{min-width:66px;min-height:34px;justify-content:center}.note-card{will-change:transform}.reply-list{max-height:220px;overflow:auto;-webkit-overflow-scrolling:touch}.reply-box input{height:40px}}
+@media(max-width:720px){.podcast-grid{grid-template-columns:1fr;gap:14px}.podcast-card{min-height:0;padding:22px}.podcast-link{min-height:44px}.stories-section .section-heading.light h2{font-size:27px}.stories-section .section-heading.light p{font-size:10px;line-height:1.7}}
 @media(hover:none){.note-card{filter:drop-shadow(0 6px 6px rgba(67,54,35,.1))}}
