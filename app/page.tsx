@@ -6,7 +6,7 @@ import {
   ChevronRight, CircleHelp, Clock3, Heart, Home, Menu, MessageCircle,
   Plus, Send, Share2, Sparkles, Target, Users, X,
 } from "lucide-react";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../src/lib/supabase";
 
 type NoteType = "wish" | "help" | "partner";
@@ -16,6 +16,7 @@ type Note = {
 };
 type NoteDraft = { type: NoteType; content: string; nickname: string; tag: string };
 type CompanionData = { participants: number; wishes: number; today: number };
+type NoteRow = { id: number | string; type: string; content: string; nickname: string; tag: string | null; created_at: string | null; status?: string | null };
 
 const typeMeta = {
   wish: { label: "心愿贴", title: "我的宝洁秋招目标", icon: Target, color: "yellow", hint: "写下目标，让认真准备的日子被看见" },
@@ -41,13 +42,25 @@ function isRlsError(error: { code?: string; message?: string } | null) {
   return error?.code === "42501" || message.includes("row-level security") || message.includes("permission denied");
 }
 
-function toNote(row: { id: number | string; type: string; content: string; nickname: string; tag: string | null; created_at: string | null; status?: string | null }): Note {
+function toNote(row: NoteRow): Note {
   const type: NoteType = row.type === "partner" || row.type === "buddy" ? "partner" : row.type === "help" ? "help" : "wish";
   const createdAt = row.created_at || new Date().toISOString();
   return { id: row.id, type, content: row.content, nickname: row.nickname || "匿名西交er", industry: "宝洁秋招", position: row.tag || "方向待定", time: relativeTime(createdAt), color: typeMeta[type].color, likes: 0, createdAt, status: row.status };
 }
 
 function noteKey(note: Pick<Note, "content" | "nickname" | "position">) { return `${note.content.trim()}::${note.nickname.trim()}::${note.position || ""}`; }
+
+function newestFirst(notes: Note[]) {
+  return [...notes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+function mergeServerNote(current: Note[], incoming: Note) {
+  const incomingKey = noteKey(incoming);
+  return newestFirst([
+    incoming,
+    ...current.filter(note => note.id !== incoming.id && !(note.optimistic && noteKey(note) === incomingKey)),
+  ]);
+}
 
 function Logo() {
   return <a className="brand" href="#top" aria-label="返回首页">
@@ -190,6 +203,8 @@ function SuccessToast({ close }: { close: () => void }) { return <motion.div cla
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]); const [selected, setSelected] = useState<Note | null>(null); const [publishing, setPublishing] = useState(false); const [success, setSuccess] = useState(false); const [newId, setNewId] = useState<number | string | null>(null); const [loading, setLoading] = useState(true); const [dataError, setDataError] = useState("");
+  const latestRequest = useRef(0);
+  const newNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const companionStats = useMemo<CompanionData>(() => {
     const now = new Date();
@@ -200,8 +215,10 @@ export default function App() {
 
   const loadNotes = useCallback(async (options?: { silent?: boolean; keepOptimistic?: boolean }) => {
     if (!supabase) { setDataError("Supabase 环境变量未生效，请检查 .env.local 后重新启动开发服务。"); setLoading(false); return null; }
+    const requestId = ++latestRequest.current;
     if (!options?.silent) setLoading(true); setDataError("");
     const { data, error } = await supabase.from("notes").select("id,type,content,nickname,tag,created_at,status").order("created_at", { ascending: false });
+    if (requestId !== latestRequest.current) return null;
     if (error) { setDataError(isRlsError(error) ? "暂时无法读取便利贴。请在 Supabase 为 public.notes 配置允许匿名 SELECT 的 RLS 策略。" : `便利贴加载失败：${error.message}`); setLoading(false); return null; }
     const refreshedNotes = (data || []).map(toNote);
     setNotes(current => {
@@ -213,7 +230,51 @@ export default function App() {
     setLoading(false); return refreshedNotes;
   }, []);
 
-  useEffect(() => { void loadNotes(); }, [loadNotes]);
+  useEffect(() => {
+    void loadNotes();
+
+    const refreshWhenActive = () => {
+      if (document.visibilityState === "visible") void loadNotes({ silent: true, keepOptimistic: true });
+    };
+    window.addEventListener("focus", refreshWhenActive);
+    document.addEventListener("visibilitychange", refreshWhenActive);
+
+    return () => {
+      window.removeEventListener("focus", refreshWhenActive);
+      document.removeEventListener("visibilitychange", refreshWhenActive);
+    };
+  }, [loadNotes]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    const client = supabase;
+
+    const channel = client
+      .channel("xjtu-pgc-public-notes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notes" },
+        payload => {
+          const incoming = toNote(payload.new as NoteRow);
+          setNotes(current => mergeServerNote(current, incoming));
+          setNewId(incoming.id);
+          if (newNoteTimer.current) clearTimeout(newNoteTimer.current);
+          newNoteTimer.current = setTimeout(() => setNewId(null), 1800);
+        },
+      )
+      .subscribe(status => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          // The regular no-cache fetch remains the fallback when Realtime is
+          // not enabled for public.notes in the Supabase publication.
+          void loadNotes({ silent: true, keepOptimistic: true });
+        }
+      });
+
+    return () => {
+      if (newNoteTimer.current) clearTimeout(newNoteTimer.current);
+      void client.removeChannel(channel);
+    };
+  }, [loadNotes]);
 
   const publish = async (draft: NoteDraft) => {
     if (!supabase) return "Supabase 环境变量未生效，请检查 .env.local 后重新启动开发服务。";
@@ -221,9 +282,18 @@ export default function App() {
     const optimisticNote: Note = { id: temporaryId, type: draft.type, content: draft.content, nickname: draft.nickname, industry: "宝洁秋招", position: draft.tag, time: "刚刚", color: typeMeta[draft.type].color, likes: 0, rotation: 2, createdAt: new Date().toISOString(), status: "local", optimistic: true };
     setNotes(current => [optimisticNote, ...current]);
     setNewId(temporaryId);
-    const { error } = await supabase.from("notes").insert({ type: draft.type, content: draft.content, nickname: draft.nickname, tag: draft.tag });
-    if (error) { setNotes(current => current.filter(note => note.id !== temporaryId)); setNewId(null); return isRlsError(error) ? "发布被 Supabase 拒绝。请为 public.notes 配置允许匿名 INSERT 的 RLS 策略。" : `发布失败：${error.message}`; }
-    await loadNotes({ silent: true, keepOptimistic: true });
+    const { data: inserted, error } = await supabase
+      .from("notes")
+      .insert({ type: draft.type, content: draft.content, nickname: draft.nickname, tag: draft.tag })
+      .select("id,type,content,nickname,tag,created_at,status")
+      .single();
+    if (error) { setNotes(current => current.filter(note => note.id !== temporaryId)); setNewId(null); return isRlsError(error) ? "发布或读取新便利贴被 Supabase 拒绝。请为 public.notes 配置允许匿名 INSERT、SELECT 的 RLS 策略。" : `发布失败：${error.message}`; }
+    if (inserted) {
+      const savedNote = toNote(inserted);
+      setNotes(current => mergeServerNote(current, savedNote));
+      setNewId(savedNote.id);
+    }
+    await loadNotes({ silent: true, keepOptimistic: false });
     setPublishing(false); setSuccess(true); location.hash = "wall"; setTimeout(() => setNewId(null), 1500); setTimeout(() => setSuccess(false), 4300); return null;
   };
 
